@@ -1,68 +1,6 @@
 package cuda
 
-// Sessions: Actives sessions within the firewall
-type Session struct {
-	Admin string `json:"admin"`
-	Idle  int    `json:"idle"`
-	Name  string `json:"name"`
-	Peer  string `json:"peer"`
-	PID   int    `json:"pid"`
-	Type  string `json:"type"`
-}
-
-type Sessions struct {
-	Sessions []Session `json:"sessions"`
-}
-
-// Admins: Box Administrators
-type Admin struct {
-	Name                  string   `json:"name"`
-	FullName              string   `json:"fullName"`
-	Enabled               bool     `json:"enabled"`
-	Roles                 []string `json:"roles"`
-	AuthenticationLevel   string   `json:"authenticationLevel"`
-	ExternalLoginName     string   `json:"externalLoginName"`
-	EnforcePasswordChange bool     `json:"enforcePasswordChange"`
-	GracePeriod           int      `json:"gracePeriod"`
-	LoginEvent            string   `json:"loginEvent"`
-	NextForcedChange      int      `json:"nextForcedChange"`
-	PasswordChangeMode    string   `json:"passwordChangeMode"`
-	PasswordValidation    string   `json:"passwordValidation"`
-	PeerIPRestriction     []string `json:"peerIpRestriction"`
-	PublicKey             string   `json:"publicKey"`
-	SystemLevelAccess     string   `json:"systemLevelAccess"`
-	WarningPeriod         int      `json:"warningPeriod"`
-}
-
-type Admins struct {
-	Admins []Admin `json:"admins"`
-}
-
-type AdminsSimple struct {
-	Admins []string `json:"admins"` /* user names only */
-}
-
-/* Services */
-
-type Service struct {
-	Name            string `json:"name"`
-	ModuleName      string `json:"moduleName"`
-	State           string `json:"state"`
-	Processes       int    `json:"processes"`
-	FileDescriptors int    `json:"fileDescriptors"`
-	Memory          int    `json:"memory"`
-	Info            string `json:"info"`
-}
-
-type Services struct {
-	Services []Service `json:"services"`
-}
-
-type ServicesSimple struct {
-	Services []string `json:"services"`
-}
-
-/* Network Objects */
+// Network Objects - IPs, references, hostnames, networks
 type NetworkObjectEntry struct {
 	Description string `json:"description,omitempty"`
 	IP          string `json:"ip,omitempty"`
@@ -92,6 +30,11 @@ type NetworkObjectIncludedEntryUpdate struct {
 }
 
 type NetworkObjectGeoEntry struct {
+	Included []string `json:"included,omitempty"`
+	Excluded []string `json:"excluded,omitempty"`
+}
+
+type NetworkObjectGeoEntryChange struct {
 	Included []string `json:"included,omitempty"`
 	Excluded []string `json:"excluded,omitempty"`
 }
@@ -139,6 +82,17 @@ type NetworkObjectIncludedChange struct {
 	Update []NetworkObjectIncludedEntryUpdate `json:"update,omitempty"`
 }
 
+type NetworkObjectGeoChange struct {
+	Add    []string `json:"add,omitempty"`
+	Remove []string `json:"remove,omitempty"`
+	Update []string `json:"update,omitempty"`
+}
+
+type NetworkObjectGeoUpdate struct {
+	Included []NetworkObjectGeoChange `json:"included,omitempty"`
+	Excluded []NetworkObjectGeoChange `json:"excluded,omitempty"`
+}
+
 type NetworkObjectsSimple struct {
 	NetworkObjects []string `json:"objects"` /* object names only */
 }
@@ -153,5 +107,5 @@ type NetworkObjectUpdate struct {
 	Dynamic     bool                        `json:"dynamic"`
 	Included    NetworkObjectIncludedChange `json:"included,omitempty"`
 	Excluded    NetworkObjectExcludedChange `json:"excluded,omitempty"`
-	Geo         *NetworkObjectGeoEntry      `json:"geo,omitempty"`
+	Geo         NetworkObjectGeoUpdate      `json:"geo,omitempty"`
 }
