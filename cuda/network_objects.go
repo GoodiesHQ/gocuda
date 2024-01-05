@@ -2,11 +2,10 @@ package cuda
 
 // Network Objects - IPs, references, hostnames, networks
 type NetworkObjectEntry struct {
-	Description string `json:"description,omitempty"`
-	IP          string `json:"ip,omitempty"`
-	MAC         string `json:"mac,omitempty"`
-	Interface   string `json:"interface,omitempty"`
-	Comment     string `json:"comment,omitempty"`
+	IP        string `json:"ip,omitempty"`
+	MAC       string `json:"mac,omitempty"`
+	Interface string `json:"interface,omitempty"`
+	Comment   string `json:"comment,omitempty"`
 }
 
 type NetworkObjectExcludedEntry struct {
