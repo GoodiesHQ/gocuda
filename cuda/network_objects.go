@@ -52,6 +52,7 @@ const NetworkObjectTypeIPv6Network = "singleIPv6Network"
 const NetworkObjectTypeIPv4Networks = "listIPv4Network"
 const NetworkObjectTypeIPv6Networks = "listIPv6Network"
 
+// The complete network object used by Barracuda for firewall and application rules
 type NetworkObject struct {
 	Name        string                       `json:"name"`
 	Type        NetworkObjectType            `json:"type"`

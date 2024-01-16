@@ -7,11 +7,12 @@ import (
 	"github.com/goodieshq/gocuda/cuda"
 )
 
+func (api *Api) EndpointRestConfigFirewallNetworkObject(ctx context.Context, objectName string) string {
+	return joinPath(api.EndpointRestConfigFirewallObjectsNetworks(ctx), objectName)
+}
+
 func (api *Api) MakeNetworkObject(ctx context.Context, object *cuda.NetworkObject) error {
-	endpoint := api.strBy(
-		"/rest/config/v1/box/firewall/objects/networks",
-		"/rest/cc/v1/config/global/firewall/objects/networks",
-	)
+	endpoint := api.EndpointRestConfigFirewallObjectsNetworks(ctx)
 	if err := api.Post(ctx, endpoint, object, nil); err != nil {
 		return err
 	}
@@ -19,10 +20,7 @@ func (api *Api) MakeNetworkObject(ctx context.Context, object *cuda.NetworkObjec
 }
 
 func (api *Api) ReplaceNetworkObject(ctx context.Context, object *cuda.NetworkObject) error {
-	endpoint := fmt.Sprintf(api.strBy(
-		"/rest/config/v1/box/firewall/objects/networks/%s",
-		"/rest/cc/v1/config/global/firewall/objects/networks/%s",
-	), object.Name)
+	endpoint := fmt.Sprintf("%s/%s", api.EndpointNetworkObject(ctx), object.Name)
 	if err := api.Put(ctx, endpoint, object, nil); err != nil {
 		return err
 	}
@@ -31,6 +29,7 @@ func (api *Api) ReplaceNetworkObject(ctx context.Context, object *cuda.NetworkOb
 
 func (api *Api) GetNetworkObject(ctx context.Context, name string) (*cuda.NetworkObject, error) {
 	object := &cuda.NetworkObject{}
+	endpoint := api.EndpointNetworkObject(ctx)
 	endpoint := fmt.Sprintf(api.strBy(
 		"/rest/config/v1/box/firewall/objects/networks/%s",
 		"/rest/cc/v1/config/global/firewall/objects/networks/%s",

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -29,11 +30,76 @@ type Api struct {
 	isCC   bool
 }
 
-func (api *Api) strBy(fwString, ccString string) string {
-	if api.isCC {
-		return ccString
+type ContextInfoCC struct {
+	Range   string
+	Cluster string
+	// either:
+	Box        string
+	BoxService string
+	// or...
+	Server        string
+	ServerService string
+	// or...
+	Service string
+	// or...
+	SharedService string
+}
+
+type SharedFirewallType string
+
+const (
+	SHARED_FIREWALL_TYPE_LOCAL   SharedFirewallType = "local"
+	SHARED_FIREWALL_TYPE_SPECIAL SharedFirewallType = "special"
+)
+
+type ContextInfoFirewall struct {
+	Shared SharedFirewallType
+}
+
+// Join strings with "/" to create an endpoint path
+func joinPath(parts ...string) string {
+	for i := range parts {
+		parts[i] = strings.Trim(parts[i], "/")
 	}
-	return fwString
+	return "/" + strings.Join(parts, "/")
+}
+
+// Create a context for control center. Global is default.
+func (api *Api) ContextCC(ctx context.Context, ctxInfo ContextInfoCC) context.Context {
+	if api.isCC {
+		if ctxInfo.Range == "" {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, "range", ctxInfo.Range)
+
+		if ctxInfo.Cluster == "" {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, "cluster", ctxInfo.Cluster)
+
+		if ctxInfo.Box == "" {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, "box", ctxInfo.Box)
+
+		if ctxInfo.Service == "" {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, "service", ctxInfo.Service)
+
+		if !ctxInfo.Shared {
+			return ctx
+		}
+		ctx = context.WithValue(ctx, "shared", ctxInfo.Shared)
+	}
+	return ctx
+}
+
+func (api *Api) ContextFirewall(ctx context.Context, ctxInfo ContextInfoFirewall) context.Context {
+	if ctxInfo.Shared {
+		return context.WithValue(ctx, "fw-shared", true)
+	}
+	return ctx
 }
 
 func (api *Api) addHeaders(req *http.Request) {
