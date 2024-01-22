@@ -9,23 +9,23 @@ type NetworkObjectEntry struct {
 }
 
 type NetworkObjectExcludedEntry struct {
-	Entry NetworkObjectEntry `json:"entry"`
+	Entry *NetworkObjectEntry `json:"entry"`
 }
 
 type NetworkObjectExcludedEntryUpdate struct {
-	Entry NetworkObjectEntry `json:"entry"`
-	ID    string             `json:"id"`
+	Entry *NetworkObjectEntry `json:"entry"`
+	ID    string              `json:"id"`
 }
 
 type NetworkObjectIncludedEntry struct {
-	Entry      NetworkObjectEntry `json:"entry,omitempty"`
-	References string             `json:"references,omitempty"`
+	Entry      *NetworkObjectEntry `json:"entry,omitempty"`
+	References string              `json:"references,omitempty"`
 }
 
 type NetworkObjectIncludedEntryUpdate struct {
-	Entry      NetworkObjectEntry `json:"entry,omitempty"`
-	References string             `json:"references,omitempty"`
-	ID         string             `json:"id"`
+	Entry      *NetworkObjectEntry `json:"entry,omitempty"`
+	References string              `json:"references,omitempty"`
+	ID         string              `json:"id"`
 }
 
 type NetworkObjectGeoEntry struct {
@@ -40,17 +40,19 @@ type NetworkObjectGeoEntryChange struct {
 
 type NetworkObjectType string
 
-const NetworkObjectTypeGeneric = "generic"
-const NetworkObjectTypeFQDN = "hostname"
-const NetworkObjectTypeHostname = "hostname"
-const NetworkObjectTypeIPv4Address = "singleIPv4Address"
-const NetworkObjectTypeIPv6Address = "singleIPv6Address"
-const NetworkObjectTypeIPv4Addresses = "listIPv4Address"
-const NetworkObjectTypeIPv6Addresses = "listIPv6Address"
-const NetworkObjectTypeIPv4Network = "singleIPv4Network"
-const NetworkObjectTypeIPv6Network = "singleIPv6Network"
-const NetworkObjectTypeIPv4Networks = "listIPv4Network"
-const NetworkObjectTypeIPv6Networks = "listIPv6Network"
+const (
+	NetworkObjectTypeGeneric       NetworkObjectType = "generic"
+	NetworkObjectTypeFQDN          NetworkObjectType = "hostname"
+	NetworkObjectTypeHostname      NetworkObjectType = "hostname"
+	NetworkObjectTypeIPv4Address   NetworkObjectType = "singleIPv4Address"
+	NetworkObjectTypeIPv6Address   NetworkObjectType = "singleIPv6Address"
+	NetworkObjectTypeIPv4Addresses NetworkObjectType = "listIPv4Address"
+	NetworkObjectTypeIPv6Addresses NetworkObjectType = "listIPv6Address"
+	NetworkObjectTypeIPv4Network   NetworkObjectType = "singleIPv4Network"
+	NetworkObjectTypeIPv6Network   NetworkObjectType = "singleIPv6Network"
+	NetworkObjectTypeIPv4Networks  NetworkObjectType = "listIPv4Network"
+	NetworkObjectTypeIPv6Networks  NetworkObjectType = "listIPv6Network"
+)
 
 // The complete network object used by Barracuda for firewall and application rules
 type NetworkObject struct {

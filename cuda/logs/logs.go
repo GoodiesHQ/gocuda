@@ -2,21 +2,21 @@ package logs
 
 import (
 	"errors"
-	"io"
 )
 
 // Any of the various Log types
 type LogEntry interface {
-	String() string   // String version of the log (could be the original or pretty-formatted line for example)
-	CSV() string      // the values of the data columns converted to strings and joined by a comma
-	Fields() []string // function that returns a static list of column names
+	String() string // String version of the log (could be the original or pretty-formatted line for example)
+	CSV() string    // the values of the data columns converted to strings and joined by a comma
 }
 
 type Parser interface {
-	ParseLine(line string) (*LogEntry, *ParseFailure)              // parse a single line (all functions ultimately use this)
-	ParseLines(lines []string) ([]LogEntry, []ParseFailure)        // parse from a slice of lines
-	ParseFile(filename string) ([]LogEntry, []ParseFailure, error) // parse by a filename. return logs, failures, and error for OS call
-	Parse(reader io.Reader) ([]LogEntry, []ParseFailure)           // parse from a reader. Creates a new scanner and reads lines from reader
+	ParseLine(line string) (LogEntry, *ParseFailure) // parse a single line (all functions ultimately use this)
+	Fields() []string                                // function that returns a static list of column names
+	FieldsCSV() string                               // function that returns a cVS formatted list of column names
+	// ParseLines(lines []string) ([]LogEntry, []ParseFailure)        // parse from a slice of lines
+	// ParseFile(filename string) ([]LogEntry, []ParseFailure, error) // parse by a filename. return logs, failures, and error for OS call
+	// Parse(reader io.Reader) ([]LogEntry, []ParseFailure)           // parse from a reader. Creates a new scanner and reads lines from reader
 }
 
 // Parse Failure Operations

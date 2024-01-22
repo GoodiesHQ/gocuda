@@ -1,10 +1,7 @@
 package logs
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,34 +11,34 @@ import (
 // Implements LogEntry
 type ActivityLogEntry struct {
 	Timestamp   time.Time // log received
-	Level       string
-	Action      string // action taken
-	Type        string
-	IPProtocol  string // tcp, udp, icmp, etc...
-	SrcIF       string // source interface
-	SrcIP       string // source IP
-	SrcNAT      string // translated source IP
-	SrcPort     uint16 // source port
-	SrcMAC      string // source MAC
-	DstIF       string // destination interface
-	DstIP       string // destination IP
-	DstNAT      string // translated destination IP
-	DstPort     uint16 // destination port
-	Service     string // service (friendly name)
-	RuleName    string // firewall rule name
-	Info        string // unknown...
-	Duration    uint64 // connection duration
-	Count       uint64 // packet count in this session
-	RXBytes     uint64 // received bytes
-	TXBytes     uint64 // sent bytes
-	RXPackets   uint64 // received packets
-	TXPackets   uint64 // sent packets
-	User        string // user of an authenticated session if exists
-	Protocol    string // not sure, but I know it differs from the IPProtocol
-	Application string // traffic application name if detected
-	Target      string // ...
-	Content     string // content type if detected
-	URLCategory string // url category if detected
+	Level       string    // severity
+	Action      string    // action taken
+	Type        string    // activity type
+	IPProtocol  string    // tcp, udp, icmp, etc...
+	SrcIF       string    // source interface
+	SrcIP       string    // source IP
+	SrcNAT      string    // translated source IP
+	SrcPort     uint16    // source port
+	SrcMAC      string    // source MAC
+	DstIF       string    // destination interface
+	DstIP       string    // destination IP
+	DstNAT      string    // translated destination IP
+	DstPort     uint16    // destination port
+	Service     string    // service (friendly name)
+	RuleName    string    // firewall rule name
+	Info        string    // unknown...
+	Duration    uint64    // connection duration
+	Count       uint64    // packet count in this session
+	RXBytes     uint64    // received bytes
+	TXBytes     uint64    // sent bytes
+	RXPackets   uint64    // received packets
+	TXPackets   uint64    // sent packets
+	User        string    // user of an authenticated session if exists
+	Protocol    string    // not sure, but I know it differs from the IPProtocol
+	Application string    // traffic application name if detected
+	Target      string    // ... possibly IDS related?
+	Content     string    // content type if detected
+	URLCategory string    // url category if detected
 }
 
 var fields = [...]string{
@@ -53,7 +50,8 @@ var fields = [...]string{
 	"Application", "Target", "Content", "URL Category"}
 
 // timestamp format: "YYYY MM DD hh:mm:ss OFFSET"
-const timestampFmt = "2006 01 02 03:04:05 -07:00"
+const timestampFmt = "2006 01 02 15:04:05 -07:00"
+
 const pattern = `` +
 	`(\d{4}\s\d{2}\s\d{2}\s\d{2}:\d{2}:\d{2}\s\S+)` + // timestamp
 	`\s+` +
@@ -63,10 +61,6 @@ const pattern = `` +
 	`\s+` +
 	`(.*)\s*$` // piped values
 var re = regexp.MustCompile(pattern)
-
-func (log *ActivityLogEntry) Fields() []string {
-	return fields[:]
-}
 
 func (log *ActivityLogEntry) CSV() string {
 	return strings.Join(
@@ -89,56 +83,15 @@ func (log *ActivityLogEntry) String() string {
 
 type ActivityLogParser struct{}
 
-func (parser *ActivityLogParser) Parse(reader io.Reader) ([]ActivityLogEntry, []ParseFailure) {
-	scanner := bufio.NewScanner(reader)
-
-	entries := make([]ActivityLogEntry, 0)
-	failures := make([]ParseFailure, 0)
-
-	for scanner.Scan() {
-		log, fail := parser.ParseLine(scanner.Text())
-		if log != nil {
-			entries = append(entries, *log)
-		}
-
-		if fail != nil {
-			failures = append(failures, *fail)
-		}
-	}
-
-	return entries, failures
+func (log *ActivityLogParser) Fields() []string {
+	return fields[:]
 }
 
-func (parser *ActivityLogParser) ParseFile(filename string) ([]ActivityLogEntry, []ParseFailure, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer file.Close()
-
-	entries, failures := parser.Parse(file)
-	return entries, failures, nil
+func (log *ActivityLogParser) FieldsCSV() string {
+	return strings.Join(log.Fields(), ",")
 }
 
-func (parser *ActivityLogParser) ParseLines(lines []string) ([]ActivityLogEntry, []ParseFailure) {
-	entries := make([]ActivityLogEntry, 0)
-	failures := make([]ParseFailure, 0)
-
-	for _, line := range lines {
-		log, fail := parser.ParseLine(line)
-		if log != nil {
-			entries = append(entries, *log)
-		}
-
-		if fail != nil {
-			failures = append(failures, *fail)
-		}
-	}
-
-	return entries, failures
-}
-
-func (parser *ActivityLogParser) ParseLine(line string) (*ActivityLogEntry, *ParseFailure) {
+func (parser *ActivityLogParser) ParseLine(line string) (LogEntry, *ParseFailure) {
 	// regex for the full log entry
 	line = strings.TrimSpace(line)
 
