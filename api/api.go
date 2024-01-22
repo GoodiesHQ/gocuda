@@ -19,7 +19,7 @@ type ApiErr struct {
 	Message string `json:"message"`
 }
 
-func (apiErr *ApiErr) String() string {
+func (apiErr *ApiErr) Error() string {
 	return fmt.Sprintf("(%d) %s", apiErr.Code, apiErr.Message)
 }
 
@@ -30,32 +30,6 @@ type Api struct {
 	isCC   bool
 }
 
-type ContextInfoCC struct {
-	Range   string
-	Cluster string
-	// either:
-	Box        string
-	BoxService string
-	// or...
-	Server        string
-	ServerService string
-	// or...
-	Service string
-	// or...
-	SharedService string
-}
-
-type SharedFirewallType string
-
-const (
-	SHARED_FIREWALL_TYPE_LOCAL   SharedFirewallType = "local"
-	SHARED_FIREWALL_TYPE_SPECIAL SharedFirewallType = "special"
-)
-
-type ContextInfoFirewall struct {
-	Shared SharedFirewallType
-}
-
 // Join strings with "/" to create an endpoint path
 func joinPath(parts ...string) string {
 	for i := range parts {
@@ -64,63 +38,38 @@ func joinPath(parts ...string) string {
 	return "/" + strings.Join(parts, "/")
 }
 
-// Create a context for control center. Global is default.
-func (api *Api) ContextCC(ctx context.Context, ctxInfo ContextInfoCC) context.Context {
-	if api.isCC {
-		if ctxInfo.Range == "" {
-			return ctx
-		}
-		ctx = context.WithValue(ctx, "range", ctxInfo.Range)
-
-		if ctxInfo.Cluster == "" {
-			return ctx
-		}
-		ctx = context.WithValue(ctx, "cluster", ctxInfo.Cluster)
-
-		if ctxInfo.Box == "" {
-			return ctx
-		}
-		ctx = context.WithValue(ctx, "box", ctxInfo.Box)
-
-		if ctxInfo.Service == "" {
-			return ctx
-		}
-		ctx = context.WithValue(ctx, "service", ctxInfo.Service)
-
-		if !ctxInfo.Shared {
-			return ctx
-		}
-		ctx = context.WithValue(ctx, "shared", ctxInfo.Shared)
-	}
-	return ctx
-}
-
-func (api *Api) ContextFirewall(ctx context.Context, ctxInfo ContextInfoFirewall) context.Context {
+/*func (api *Api) ContextFirewall(ctx context.Context, ctxInfo ContextInfoFirewall) context.Context {
 	if ctxInfo.Shared {
 		return context.WithValue(ctx, "fw-shared", true)
 	}
 	return ctx
-}
+}*/
 
+// JSON REST API and Token
 func (api *Api) addHeaders(req *http.Request) {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Api-Token", api.key)
 }
 
 func (api *Api) send(req *http.Request, target interface{}, codes []int) error {
+	// add headers to all requests
 	api.addHeaders(req)
+
+	// perform the request
 	res, err := api.client.Do(req)
 	if err != nil {
 		return err
 	}
 
+	// if no status codes provided, expect 2XX code
 	if (codes == nil && res.StatusCode/100 != 2) || (codes != nil && !slices.Contains(codes, res.StatusCode)) {
 		log.Warn().Msgf("Unexpected Status Code: %d", res.StatusCode)
 		apiErr := &ApiErr{}
 		if err := json.NewDecoder(res.Body).Decode(apiErr); err != nil {
 			return err
 		}
-		return fmt.Errorf(apiErr.String())
+		return apiErr
+		// return fmt.Errorf(apiErr.String())
 	}
 
 	if target != nil {
@@ -135,7 +84,7 @@ func (api *Api) send(req *http.Request, target interface{}, codes []int) error {
 func (api *Api) Delete(ctx context.Context, endpoint string) error {
 	url := api.url + endpoint
 	log.Debug().Msgf("DELETE URL: %s", url)
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, endpoint, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
